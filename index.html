@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIT 117 – Group 05 | System Administration Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0f2c52;
+    --navy2:#15396b;
+    --blue:#2563a8;
+    --sky:#3d86d6;
+    --teal:#179187;
+    --amber:#e08a36;
+    --ink:#1c2733;
+    --muted:#5b6b7c;
+    --line:#d8e1ea;
+    --bg:#eef2f6;
+    --card:#ffffff;
+    --soft:#f3f7fb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    font-weight:400;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  b,strong{font-weight:600;color:var(--navy2)}
+
+  /* ---------- Stage / scaling ---------- */
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  .slide{
+    width:1280px;height:720px;background:var(--card);position:absolute;overflow:hidden;
+    transform-origin:center center;display:none;
+    box-shadow:0 24px 60px rgba(15,44,82,.28);
+  }
+  .slide.active{display:block}
+
+  /* ---------- Shared slide anatomy ---------- */
+  .pad{padding:54px 64px}
+  .kicker{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);
+  }
+  .kicker .dot{width:8px;height:8px;border-radius:50%;background:var(--amber)}
+  h2.title{font-size:38px;font-weight:700;color:var(--navy);line-height:1.1;margin-top:12px;letter-spacing:-.4px}
+  .sub{color:var(--muted);font-size:17px;margin-top:10px;max-width:980px;line-height:1.5}
+  .rule{height:4px;width:74px;background:linear-gradient(90deg,var(--amber),var(--sky));border-radius:3px;margin-top:14px}
+  .topbar{height:8px;width:100%;background:linear-gradient(90deg,var(--navy),var(--blue),var(--teal))}
+
+  .foot{
+    position:absolute;bottom:0;left:0;right:0;height:42px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 64px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);background:var(--soft);
+  }
+  .foot b{font-weight:600;color:var(--navy2)}
+
+  /* ---------- Icons (line art) ---------- */
+  .ic{
+    width:32px;height:32px;border-radius:8px;flex:0 0 auto;
+    display:inline-flex;align-items:center;justify-content:center;background:var(--navy);color:#fff;
+  }
+  .ic.teal{background:var(--teal)} .ic.amber{background:var(--amber)} .ic.blue{background:var(--blue)} .ic.sky{background:var(--sky)}
+  .ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .ic.letter{font-size:15px;font-weight:600}
+
+  /* ---------- Cards & grids ---------- */
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .card h3{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+  .card ul{list-style:none;font-size:13.5px;color:#36475a;line-height:1.5}
+  .card li{position:relative;padding-left:16px;margin:6px 0}
+  .card li::before{content:"";position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:50%;background:var(--sky)}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:600;font-size:12.5px}
+  td{padding:8px 12px;border-bottom:1px solid var(--line);color:#36475a;vertical-align:top}
+  tr:nth-child(even) td{background:var(--soft)}
+
+  /* pills */
+  .pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:6px}
+  .pill{background:#fff;border:1px solid var(--line);border-radius:22px;padding:7px 15px;font-size:13px;color:var(--navy2);font-weight:500;display:flex;align-items:center;gap:8px}
+  .pill .d{width:8px;height:8px;border-radius:50%}
+
+  /* flow */
+  .flow{display:flex;align-items:stretch;gap:10px}
+  .flow .step{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .flow .step .n{font-size:11px;color:var(--amber);font-weight:600;letter-spacing:.1em}
+  .flow .step h4{font-size:14.5px;font-weight:600;color:var(--navy);margin:5px 0 4px}
+  .flow .step p{font-size:12px;color:var(--muted);line-height:1.4}
+  .flow .arr{display:flex;align-items:center;color:var(--sky)}
+  .flow .arr svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+  /* stats */
+  .stats{display:flex;gap:14px}
+  .stat{flex:1;background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;border-radius:14px;padding:16px 18px}
+  .stat .v{font-size:30px;font-weight:700;line-height:1}
+  .stat .l{font-size:12.5px;opacity:.85;margin-top:6px}
+
+  /* inline lead arrow note */
+  .note{display:flex;align-items:flex-start;gap:8px;color:var(--navy);font-weight:500}
+  .note svg{width:18px;height:18px;flex:0 0 auto;margin-top:2px;fill:none;stroke:var(--teal);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ===== TITLE ===== */
+  .cover{
+    height:100%;
+    background:
+      radial-gradient(1100px 540px at 82% -10%,rgba(61,134,214,.40),transparent 60%),
+      radial-gradient(900px 560px at -8% 115%,rgba(23,145,135,.34),transparent 60%),
+      linear-gradient(135deg,#0c2342,#11315c 55%,#0f2c52);
+    color:#fff;position:relative;display:flex;flex-direction:column;justify-content:center;padding:0 80px;
+  }
+  .cover .uni{font-size:16px;letter-spacing:.06em;color:#aecbf0;font-weight:500}
+  .cover .course{font-size:14px;color:#8fb4e2;margin-top:4px;letter-spacing:.04em}
+  .cover h1{font-size:52px;font-weight:700;line-height:1.07;margin:22px 0 8px;letter-spacing:-1px;max-width:900px}
+  .cover .assign{font-size:15px;color:#cdddf2;font-weight:400}
+  .cover .grp{position:absolute;top:64px;right:80px;text-align:right}
+  .cover .grp .gn{font-size:46px;font-weight:700;color:#fff;line-height:1}
+  .cover .grp .gl{font-size:13px;letter-spacing:.3em;color:#9cc0ea;text-transform:uppercase}
+  .mtable{margin-top:26px;border-collapse:collapse;width:580px;font-size:14.5px;letter-spacing:normal}
+  .mtable caption{text-align:left;font-size:13px;letter-spacing:normal;color:#bcd4ef;padding-bottom:8px;font-weight:600}
+  .mtable th{background:transparent;color:#cfe0f3;font-weight:600;font-size:13px;letter-spacing:normal;border-bottom:1px solid rgba(255,255,255,.40);padding:8px 14px}
+  .mtable td,.mtable tr:nth-child(even) td{padding:8px 14px;color:#ffffff;border-bottom:1px solid rgba(255,255,255,.16);background:transparent;font-weight:500}
+  .mtable td.id{color:#dbe7f6;font-weight:400;font-variant-numeric:tabular-nums}
+  .mtable td.no{color:#a8c3e4;width:34px}
+  .cover .meta{position:absolute;bottom:46px;left:80px;font-size:13px;color:#9cc0ea}
+  .cover .meta b{color:#fff;font-weight:600}
+
+  /* org chart */
+  .org{display:flex;flex-direction:column;align-items:center;margin-top:4px}
+  .node{background:var(--navy);color:#fff;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:500;text-align:center}
+  .node.mgr{background:var(--teal)}
+  .leads{display:flex;gap:10px;margin-top:14px}
+  .lead{flex:1;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff}
+  .lead .h{padding:9px 8px;color:#fff;font-size:12px;font-weight:600;text-align:center;line-height:1.2}
+  .lead ul{list-style:none;padding:9px 11px;font-size:11px;color:#46586a;line-height:1.45}
+  .lead li{margin:3px 0}
+  .conn{height:18px;width:2px;background:var(--line)}
+  .connh{height:2px;background:var(--line);width:78%}
+
+  /* ---------- Toolbar ---------- */
+  #bar{
+    position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;
+    background:rgba(15,44,82,.94);border-radius:30px;padding:7px 10px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:50;
+  }
+  #bar button{
+    border:0;background:rgba(255,255,255,.12);color:#fff;cursor:pointer;width:36px;height:36px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;transition:.15s;font-family:inherit;
+  }
+  #bar button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #bar button:hover{background:rgba(255,255,255,.28)}
+  #count{color:#cfe0f3;font-size:13px;font-weight:500;min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
+  #pdf{width:auto!important;border-radius:20px!important;padding:0 16px;gap:7px;background:var(--amber)!important;font-weight:600;font-size:13px}
+  #pdf:hover{background:#f0993f!important}
+  .hint{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-size:12px;color:#7d8ea0;z-index:40}
+
+  /* ---------- PRINT ---------- */
+  @page{size:13.333in 7.5in;margin:0}
+  @media print{
+    body{background:#fff;overflow:visible}
+    #bar,.hint{display:none!important}
+    #stage{position:static;display:block}
+    .slide{
+      display:block!important;position:relative;width:13.333in;height:7.5in;
+      transform:none!important;left:auto!important;top:auto!important;
+      box-shadow:none;page-break-after:always;break-after:page;margin:0;
+    }
+    .slide:last-child{page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+
+<div class="hint">Use ← / → arrows to navigate · Export PDF prints all 10 slides</div>
+
+<div id="stage">
+
+  <!-- ============ SLIDE 1 : TITLE ============ -->
+  <section class="slide active">
+    <div class="cover">
+      <div class="grp"><div class="gn">05</div><div class="gl">Group</div></div>
+      <div class="uni">Sabaragamuwa University of Sri Lanka</div>
+      <div class="course">Master of Information Technology (MIT), 2025 · MIT 117 System Administration &amp; Maintenance</div>
+      <h1>System Administration Plan for a Growing Educational Institution</h1>
+      <div class="assign">In-Class Group Assignment 01 · ABC Institute</div>
+
+      <table class="mtable">
+        <caption>Group Members</caption>
+        <tr><th class="no">#</th><th>Student Name</th><th>Index Number</th></tr>
+        <tr><td class="no">1</td><td>Upula Amarasinghe</td><td class="id">2512091037</td></tr>
+        <tr><td class="no">2</td><td>M. L. M. Shaheer</td><td class="id">2512091057</td></tr>
+        <tr><td class="no">3</td><td>Keshara Wijesinghe</td><td class="id">2512091011</td></tr>
+        <tr><td class="no">4</td><td>K. R. G. Punchihewa</td><td class="id">2512091030</td></tr>
+        <tr><td class="no">5</td><td>W. J. W. W. D. T. T. J. Perera</td><td class="id">2512091006</td></tr>
+      </table>
+
+      <div class="meta">Lecturer: <b>Prof. Salinda Premadasa</b> &nbsp;·&nbsp; Presentation: <b>20th June 2026</b></div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 2 : SCENARIO ============ -->
+  <section class="slide">
+    <div class="topbar"></div>
+    <div class="pad">
+      <span class="kicker"><span class="dot"></span>The Scenario</span>
+      <h2 class="title">The Challenge at ABC Institute</h2>
+      <div class="rule"></div>
+
+      <div class="stats" style="margin-top:22px">
+        <div class="stat"><div class="v">500</div><div class="l">Students</div></div>
+        <div class="stat"><div class="v">50</div><div class="l">Academic staff</div></div>
+        <div class="stat"><div class="v">20</div><div class="l">Administrative staff</div></div>
+        <div class="stat"><div class="v">7</div><div class="l">Admin domains + DR</div></div>
+      </div>
+
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card">
+          <h3><span class="ic blue"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Current systems</h3>
+          <ul>
+            <li>Public website &amp; online learning platform</li>
+            <li>Staff &amp; student email and file storage</li>
+            <li>Academic databases &amp; computer laboratories</li>
+            <li>Administrative information systems</li>
+          </ul>
+        </div>
+        <div class="card" style="background:#fdf2ea;border-color:#f3d6bb">
+          <h3><span class="ic amber"><svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>Problems experienced</h3>
+          <ul>
+            <li>Accidental <b>deletion of student records</b></li>
+            <li><b>Weak password</b> practices</li>
+            <li>Website <b>downtime</b> during registration</li>
+            <li>No backup or disaster-recovery plan; limited support</li>
+          </ul>
+        </div>
+      </div>
+      <p class="sub" style="margin-top:16px">Our team designs a complete, practical solution across seven administrative domains plus a disaster-recovery strategy, restoring data integrity, security and uptime.</p>
+    </div>
+    <div class="foot"><span>MIT 117 · System Administration Plan</span><span><b>Group 05</b> · Scenario</span></div>
+  </section>
+
+  <!-- ============ SLIDE 3 : TASK 1 ============ -->
+  <section class="slide">
+    <div class="topbar"></div>
+    <div class="pad">
+      <span class="kicker"><span class="dot"></span>Task 1</span>
+      <h2 class="title">Content Management &amp; Deployment</h2>
+      <div class="rule"></div>
+
+      <div class="grid g3" style="margin-top:22px">
+        <div class="card">
+          <h3><span class="ic blue"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg></span>Platforms</h3>
+          <ul>
+            <li><b>WordPress</b> for the public website</li>
+            <li><b>Moodle</b> for the LMS</li>
+            <li>Role-based logins, no direct file edits</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3><span class="ic teal"><svg viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></span>Version control</h3>
+          <ul>
+            <li><b>Git</b> for themes, configs &amp; scripts</li>
+            <li>Full change history + rollback</li>
+            <li>Microsoft 365 versioning for documents</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3><span class="ic amber"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>Central management</h3>
+          <ul>
+            <li>Lab &amp; staff PCs via <b>WSUS / Intune</b></li>
+            <li>Scheduled release windows</li>
+            <li>Avoid peak registration periods</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="sub" style="margin:20px 0 8px;font-weight:500;color:var(--navy)">Staging → Production deployment &amp; three-step approval</p>
+      <div class="flow">
+        <div class="step"><div class="n">STAGE 1</div><h4>Author drafts</h4><p>Content created &amp; staged</p></div>
+        <div class="arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="step"><div class="n">STAGE 2</div><h4>Reviewer checks</h4><p>HoD / Comms verifies accuracy</p></div>
+        <div class="arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="step"><div class="n">STAGE 3</div><h4>Test &amp; validate</h4><p>Staging copy approved</p></div>
+        <div class="arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="step"><div class="n">STAGE 4</div><h4>Publisher releases</h4><p>To production · change logged</p></div>
+      </div>
+    </div>
+    <div class="foot"><span>MIT 117 · System Administration Plan</span><span><b>Group 05</b> · Task 1</span></div>
+  </section>
+
+  <!-- ============ SLIDE 4 : TASK 2 ============ -->
+  <section class="slide">
+    <div class="topbar"></div>
+    <div class="pad">
+      <span class="kicker"><span class="dot"></span>Task 2</span>
+      <h2 class="title">Server Administration: Hybrid 2-Server Design</h2>
+      <div class="rule"></div>
+      <p class="sub" style="margin-top:10px">One cloud Linux server + one local Windows server, backed by managed cloud services for DNS, email and off-site backup, for full <b>3-2-1</b> protection with no extra hardware.</p>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card" style="padding:14px 16px">
+          <h3 style="margin-bottom:6px"><span class="ic teal"><svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></span>Cloud: Linux + managed services</h3>
+          <table>
+            <tr><th>Component</th><th>Platform</th></tr>
+            <tr><td><b>Web / LMS server</b><br>WordPress · Moodle · MariaDB</td><td>Linux VM (Ubuntu)</td></tr>
+            <tr><td>Public DNS + CDN</td><td>Cloudflare (free)</td></tr>
+            <tr><td>Off-site backup</td><td>AWS S3 bucket</td></tr>
+            <tr><td>Staff / student email</td><td>M365 · Google Workspace</td></tr>
+          </table>
+        </div>
+        <div class="card" style="padding:14px 16px">
+          <h3 style="margin-bottom:6px"><span class="ic blue"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><line x1="6" y1="7" x2="6.01" y2="7"/><line x1="6" y1="17" x2="6.01" y2="17"/></svg></span>Local: Windows server + NAS</h3>
+          <table>
+            <tr><th>Component</th><th>Platform</th></tr>
+            <tr><td><b>Main server</b><br>Active Directory · DNS · DHCP · file share</td><td>Windows Server 2022</td></tr>
+            <tr><td>On-site backup → AWS S3</td><td>NAS + Veeam / WSB</td></tr>
+          </table>
+          <div class="pills" style="margin-top:12px">
+            <span class="pill"><span class="d" style="background:var(--teal)"></span>CIS-hardened images</span>
+            <span class="pill"><span class="d" style="background:var(--blue)"></span>Zabbix monitoring</span>
+            <span class="pill"><span class="d" style="background:var(--amber)"></span>Load balancer + CDN</span>
+          </div>
+        </div>
+      </div>
+      <p class="sub" style="margin-top:14px"><b>Install / Configure:</b> least functionality, NTP sync, central logging &nbsp;·&nbsp; <b>Monitor:</b> alerts before users are affected, redundancy for registration peaks &nbsp;·&nbsp; <b>Maintain:</b> scheduled patching &amp; lifecycle planning.</p>
+    </div>
+    <div class="foot"><span>MIT 117 · System Administration Plan</span><span><b>Group 05</b> · Task 2</span></div>
+  </section>
+
+  <!-- ============ SLIDE 5 : TASK 3 ============ -->
+  <section class="slide">
+    <div class="topbar"></div>
+    <div class="pad">
+      <span class="kicker"><span class="dot"></span>Task 3</span>
+      <h2 class="title">User &amp; Group Management</h2>
+      <div class="rule"></div>
+
+      <div class="grid" style="grid-template-columns:1.35fr 1fr;margin-top:20px">
+        <div class="card" style="padding:14px 16px">
+          <h3 style="margin-bottom:6px"><span class="ic blue"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Groups &amp; access (RBAC)</h3>
+          <table>
+            <tr><th>Group</th><th>Typical access</th></tr>
+            <tr><td><b>Students</b></td><td>LMS, student email, lab PCs, limited storage</td></tr>
+            <tr><td><b>Lecturers</b></td><td>Course mgmt, databases (read), shared drives</td></tr>
+            <tr><td><b>Admin-Staff</b></td><td>Admin systems, finance/HR shares, email</td></tr>
+            <tr><td><b>IT-Admins</b></td><td>Full server &amp; management-tool access</td></tr>
+            <tr><td><b>Library/Finance/HR</b></td><td>Department-specific apps &amp; shares only</td></tr>
+          </table>
+        </div>
+        <div class="grid" style="gap:14px">
+          <div class="card">
+            <h3><span class="ic teal"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>Least privilege</h3>
+            <ul>
+              <li>Permissions to <b>groups, not people</b></li>
+              <li><b>Delete rights restricted</b> to a few accounts</li>
+              <li>LMS roles: student / teacher / manager</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3><span class="ic amber"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>Secure lifecycle</h3>
+            <ul>
+              <li>Central <b>AD / LDAP</b> with <b>SSO + MFA</b></li>
+              <li><b>Joiner–mover–leaver</b> provisioning</li>
+              <li>Audit logging of every change</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:14px;font-size:15px"><svg viewBox="0 0 24 24"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>Directly prevents accidental deletion of student records: limited delete rights + least privilege + full audit trail.</p>
+    </div>
+    <div class="foot"><span>MIT 117 · System Administration Plan</span><span><b>Group 05</b> · Task 3</span></div>
+  </section>
+
+  <!-- ============ SLIDE 6 : TASK 4 + DR ============ -->
+  <section class="slide">
+    <div class="topbar"></div>
+    <div class="pad">
+      <span class="kicker"><span class="dot"></span>Task 4 &amp; Disaster Recovery</span>
+      <h2 class="title">Backup Management &amp; Disaster Recovery</h2>
+      <div class="rule"></div>
+
+      <div class="pills" style="margin-top:16px">
+        <span class="pill"><span class="d" style="background:var(--navy)"></span><b>3 copies</b> of data</span>
+        <span class="pill"><span class="d" style="background:var(--blue)"></span><b>2 media</b> types</span>
+        <span class="pill"><span class="d" style="background:var(--teal)"></span><b>1 off-site</b> copy</span>
+        <span class="pill"><span class="d" style="background:var(--amber)"></span>Immutable / versioned · tested restores</span>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card" style="padding:14px 16px">
+          <h3 style="margin-bottom:6px"><span class="ic blue"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span>Backup schedule</h3>
+          <table>
+            <tr><th>Data</th><th>Type</th><th>Frequency</th></tr>
+            <tr><td>Student records / DB</td><td>Incr. + log</td><td>Daily / hourly</td></tr>
+            <tr><td>Full database</td><td>Full</td><td>Weekly</td></tr>
+            <tr><td>File server</td><td>Incremental</td><td>Daily</td></tr>
+            <tr><td>Server images</td><td>Full image</td><td>Weekly</td></tr>
+            <tr><td>LMS &amp; website</td><td>Full + incr.</td><td>Weekly + daily</td></tr>
+          </table>
+        </div>
+        <div class="card" style="padding:14px 16px">
+          <h3 style="margin-bottom:6px"><span class="ic teal"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>DR recovery objectives</h3>
+          <table>
+            <tr><th>Service</th><th>RTO</th><th>RPO</th></tr>
+            <tr><td>Student records / DB</td><td>1 hr</td><td>15 min</td></tr>
+            <tr><td>Website &amp; registration</td><td>2 hr</td><td>1 hr</td></tr>
+            <tr><td>LMS</td><td>4 hr</td><td>1 hr</td></tr>
+            <tr><td>Email</td><td>4 hr</td><td>1 hr</td></tr>
+            <tr><td>File services</td><td>8 hr</td><td>24 hr</td></tr>
+          </table>
+        </div>
+      </div>
+      <p class="sub" style="margin-top:12px"><b>DR components:</b> documented runbooks &amp; roles · cloud failover environment · UPS power backup · communication plan · annual DR drills to prove recovery works.</p>
+    </div>
+    <div class="foot"><span>MIT 117 · System Administration Plan</span><span><b>Group 05</b> · Task 4 + DR</span></div>
+  </section>
+
+  <!-- ============ SLIDE 7 : TASK 5 ============ -->
+  <section class="slide">
+    <div class="topbar"></div>
+    <div class="pad">
+      <span class="kicker"><span class="dot"></span>Task 5</span>
+      <h2 class="title">Security Management</h2>
+      <div class="rule"></div>
+
+      <div class="grid g3" style="margin-top:20px">
+        <div class="card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg></span>Identity &amp; access</h3>
+          <ul>
+            <li><b>12+ char passwords</b>, lockout, 2FA</li>
+            <li>Password manager + SSO</li>
+            <li>RBAC, least privilege, VPN for remote</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3><span class="ic teal"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Network &amp; endpoint</h3>
+          <ul>
+            <li>Next-gen <b>firewall</b>, default-deny</li>
+            <li><b>VLANs</b>: students/staff/servers/labs/DMZ</li>
+            <li>Central antivirus · TLS · WPA3 Wi-Fi</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3><span class="ic amber"><svg viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2 3 6 3s6-2 6-3v-5"/></svg></span>People &amp; logs</h3>
+          <ul>
+            <li>Security <b>awareness training</b></li>
+            <li><b>Phishing simulations</b></li>
+            <li>Central logs, reviewed regularly</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="sub" style="margin:18px 0 8px;font-weight:500;color:var(--navy)">Maintaining the CIA triad</p>
+      <div class="grid g3" style="gap:14px">
+        <div class="card" style="background:linear-gradient(160deg,#0f2c52,#15396b);color:#fff;border:none">
+          <h3 style="color:#fff"><span class="ic letter teal">C</span>Confidentiality</h3>
+          <ul style="color:#cfe0f3"><li style="color:#cfe0f3">Encryption (TLS, disk), RBAC, 2FA, VPN</li></ul>
+        </div>
+        <div class="card" style="background:linear-gradient(160deg,#15396b,#2563a8);color:#fff;border:none">
+          <h3 style="color:#fff"><span class="ic letter amber">I</span>Integrity</h3>
+          <ul style="color:#dfeafa"><li style="color:#dfeafa">Checksums, version control, change mgmt, audit logs</li></ul>
+        </div>
+        <div class="card" style="background:linear-gradient(160deg,#117a72,#179187);color:#fff;border:none">
+          <h3 style="color:#fff"><span class="ic letter" style="background:#fff;color:var(--teal)">A</span>Availability</h3>
+          <ul style="color:#d6f1ee"><li style="color:#d6f1ee">Redundancy, load balancing, backups, DR, DDoS protection</li></ul>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>MIT 117 · System Administration Plan</span><span><b>Group 05</b> · Task 5</span></div>
+  </section>
+
+  <!-- ============ SLIDE 8 : TASK 6 + 7 ============ -->
+  <section class="slide">
+    <div class="topbar"></div>
+    <div class="pad">
+      <span class="kicker"><span class="dot"></span>Task 6 &amp; Task 7</span>
+      <h2 class="title">Automation &amp; User Support</h2>
+      <div class="rule"></div>
+
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card" style="padding:16px 20px">
+          <h3><span class="ic teal"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>Automation Management</h3>
+          <ul>
+            <li>Account provisioning: <b>PowerShell + AD</b> (CSV bulk-create)</li>
+            <li>Backup scheduling: <b>Task Scheduler / cron</b> (nightly 12 AM)</li>
+            <li>Monitoring &amp; alerts: <b>Zabbix</b> (e.g. CPU &gt; 90%)</li>
+            <li>Patching: <b>WSUS / Intune</b></li>
+            <li>Log rotation, cert renewal, report generation</li>
+          </ul>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:10px">Saves time, reduces human error, frees the small IT team for higher-value work.</p>
+        </div>
+        <div class="card" style="padding:16px 20px">
+          <h3><span class="ic amber"><svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></span>User Support &amp; Education</h3>
+          <ul>
+            <li><b>osTicket</b> help desk: portal, email, phone, walk-in</li>
+            <li><b>Two-tier support</b>: L1 common · L2 complex / escalation</li>
+            <li><b>SLAs</b> with response / resolution targets by priority</li>
+            <li>Induction + <b>cybersecurity awareness</b> programmes</li>
+            <li>Self-service <b>knowledge base</b>: FAQs &amp; user guides</li>
+          </ul>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:10px">Resolves limited technical support; every request logged &amp; tracked.</p>
+        </div>
+      </div>
+
+      <div class="flow" style="margin-top:18px">
+        <div class="step" style="background:var(--soft)"><div class="n">CODE</div><h4>PowerShell · cron</h4><p>Scripted, repeatable</p></div>
+        <div class="arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="step" style="background:var(--soft)"><div class="n">SCHEDULE</div><h4>Task Scheduler</h4><p>Runs unattended</p></div>
+        <div class="arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="step" style="background:var(--soft)"><div class="n">MONITOR</div><h4>Zabbix alerts</h4><p>Acts before failure</p></div>
+        <div class="arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="step" style="background:var(--soft)"><div class="n">SUPPORT</div><h4>osTicket + KB</h4><p>Users helped fast</p></div>
+      </div>
+    </div>
+    <div class="foot"><span>MIT 117 · System Administration Plan</span><span><b>Group 05</b> · Task 6 &amp; 7</span></div>
+  </section>
+
+  <!-- ============ SLIDE 9 : ORG STRUCTURE ============ -->
+  <section class="slide">
+    <div class="topbar"></div>
+    <div class="pad" style="padding-bottom:0">
+      <span class="kicker"><span class="dot"></span>Deliverable</span>
+      <h2 class="title">Proposed IT Administration Structure</h2>
+      <div class="rule"></div>
+
+      <div class="org" style="margin-top:18px">
+        <div class="node">ICT Governance / Steering Committee &nbsp;·&nbsp; <span style="opacity:.8">policy &amp; budget</span></div>
+        <div class="conn"></div>
+        <div class="node mgr">ICT Manager &nbsp;·&nbsp; <span style="opacity:.85">day-to-day coordination</span></div>
+        <div class="conn"></div>
+        <div class="connh"></div>
+
+        <div class="leads">
+          <div class="lead">
+            <div class="h" style="background:var(--navy)">Infrastructure &amp; Network Lead</div>
+            <ul><li>Hardware</li><li>Network security</li><li>Data-centre ops</li></ul>
+          </div>
+          <div class="lead">
+            <div class="h" style="background:var(--blue)">Software &amp; Applications Lead</div>
+            <ul><li>Software dev</li><li>Database mgmt</li><li>App support</li></ul>
+          </div>
+          <div class="lead">
+            <div class="h" style="background:var(--teal)">IT Support &amp; Helpdesk Lead</div>
+            <ul><li>User support</li><li>Troubleshooting</li><li>IT asset mgmt</li></ul>
+          </div>
+          <div class="lead">
+            <div class="h" style="background:#3a5a78">Information Security Officer</div>
+            <ul><li>Cybersecurity policy</li><li>Risk management</li><li>Compliance</li></ul>
+          </div>
+          <div class="lead">
+            <div class="h" style="background:var(--amber)">Data &amp; Analytics Lead</div>
+            <ul><li>Data warehousing</li><li>Business intelligence</li><li>Reporting</li></ul>
+          </div>
+        </div>
+      </div>
+      <p class="sub" style="margin-top:18px">Clear ownership across all seven administrative domains, keeping responsibilities unambiguous as the institute grows.</p>
+    </div>
+    <div class="foot"><span>MIT 117 · System Administration Plan</span><span><b>Group 05</b> · IT Structure</span></div>
+  </section>
+
+  <!-- ============ SLIDE 10 : CONCLUSION ============ -->
+  <section class="slide">
+    <div class="topbar"></div>
+    <div class="pad">
+      <span class="kicker"><span class="dot"></span>Conclusion</span>
+      <h2 class="title">How We Solve ABC Institute's Problems</h2>
+      <div class="rule"></div>
+
+      <table style="margin-top:18px">
+        <tr><th style="width:38%">Problem identified</th><th>Recommended solution</th></tr>
+        <tr><td><b>Accidental deletion of records</b></td><td>Least-privilege RBAC, restricted delete rights, audit logs, soft-delete + tested backups</td></tr>
+        <tr><td><b>Weak password practices</b></td><td>Enforced password policy, 2FA, SSO, password manager</td></tr>
+        <tr><td><b>Website downtime at registration</b></td><td>Load balancing / redundancy, caching + CDN, monitoring, capacity planning</td></tr>
+        <tr><td><b>Lack of backup procedures</b></td><td>Automated 3-2-1 strategy, off-site/cloud + immutable copies, verified restores</td></tr>
+        <tr><td><b>Limited technical support</b></td><td>Ticketing system, tiered help desk with SLAs, documentation &amp; training</td></tr>
+        <tr><td><b>No disaster recovery plan</b></td><td>Documented DR plan with RTO/RPO targets, off-site failover, annual DR drills</td></tr>
+      </table>
+
+      <div class="card" style="margin-top:16px;background:linear-gradient(160deg,#0f2c52,#15396b);color:#fff;border:none">
+        <h3 style="color:#fff;margin-bottom:6px"><span class="ic amber"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>Roadmap &amp; priorities</h3>
+        <p style="font-size:13.5px;color:#cfe0f3;line-height:1.5">
+          <b style="color:#fff">Now:</b> 2FA, automated backups &amp; help desk &nbsp;→&nbsp;
+          <b style="color:#fff">Mid-term:</b> monitoring &amp; scaling infrastructure &nbsp;→&nbsp;
+          <b style="color:#fff">Long-term:</b> disaster-recovery investment. A secure, scalable IT environment that grows with the institute.</p>
+      </div>
+    </div>
+    <div class="foot"><span>MIT 117 · System Administration Plan</span><span><b>Group 05</b> · Thank You</span></div>
+  </section>
+
+</div>
+
+<!-- ---------- Toolbar ---------- -->
+<div id="bar">
+  <button id="first" title="First (Home)"><svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+  <button id="prev" title="Previous (←)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <span id="count">1 / 10</span>
+  <button id="next" title="Next (→)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <button id="last" title="Last (End)"><svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+  <button id="pdf" title="Export to PDF"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export PDF</button>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;const BASE_W=1280,BASE_H=720;
+  function fit(){
+    const pad=70;
+    const s=Math.min((innerWidth-pad)/BASE_W,(innerHeight-pad*1.6)/BASE_H);
+    slides.forEach(sl=>sl.style.transform=`scale(${s})`);
+  }
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((sl,k)=>sl.classList.toggle('active',k===i));
+    document.getElementById('count').textContent=`${i+1} / ${slides.length}`;
+  }
+  document.getElementById('next').onclick=()=>show(i+1);
+  document.getElementById('prev').onclick=()=>show(i-1);
+  document.getElementById('first').onclick=()=>show(0);
+  document.getElementById('last').onclick=()=>show(slides.length-1);
+  document.getElementById('pdf').onclick=()=>window.print();
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){show(i+1);e.preventDefault();}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){show(i-1);e.preventDefault();}
+    else if(e.key==='Home'){show(0);}
+    else if(e.key==='End'){show(slides.length-1);}
+    else if(e.key==='p'||e.key==='P'){window.print();}
+  });
+  addEventListener('resize',fit);
+  fit();show(0);
+</script>
+</body>
+</html>
